@@ -23,6 +23,19 @@ class GMTA:
         optimizer_maxiter = 600,
         quandl_apikey = None,
     ):
+        """
+        class for trading algorithm
+
+        scodes (list): list of stock symbols to be considered by algorithm, 
+            the portfolio to apply this algorithm can not own stocks not in this list but not verse vice
+        Rf (float): risk free rate, daily or minutely base on yourt algorithm frequent
+        period (int): the last `period` entries will be used as history
+        no_short (bool): wheather shorting strategy is allowed, robinhood account dot allow storting stocks
+        optimizer_tol (float): the tolerance for optimizer to seek GMV and MVE
+        optimizer_maxiter (int): maximum iterations allowed for optimizer to find solution
+        quandl_apikey (string|None): optional, put None here if your data wont come from quandl 
+
+        """
         global use_quandl,use_portfoliomgr
         if not use_quandl:
             assert quandl_apikey is None
@@ -38,6 +51,11 @@ class GMTA:
         self.apikey = quandl_apikey
             
     def update(self,data=None):
+        """
+        update data and statistics info of data
+
+        data (DataFrame|None): data of historical price change in each stock 
+        """
         if data is not None:
             self.data = data
         self.cov = self.data.cov()
@@ -45,15 +63,38 @@ class GMTA:
         self.mean = self.data.mean()
         
     def global_variance(self,w):
+        """
+        calculate global variance of portfolio if assets weight is w
+        
+        w (array): array of weights of assets
+
+                GV = sqrt( w COV w^T )
+
+        """
         assert len(w) == len(self.scodes)
         res = np.dot(np.matmul(w,self.cov.values),w)
         return np.sqrt(res)
     
     def sharpe_ratio(self,w):
+        """
+        calculate sharpe ratio of portifolio if assets weight is w
+
+        w (array): array of weights of assets
+
+        """
         assert len(w) == len(self.scodes)
-        return (np.dot(w,self.std.values)-self.Rf)/self.global_variance(w)
+        return (np.dot(w,self.mean.values)-self.Rf)/self.global_variance(w)
     
     def GMV(self,no_short = None,tol = None,maxiter = None):
+        """
+        calculate global min variance weight of assets
+
+        no_short (bool|None): allow short or not
+        tol (float|None): tolerance for optimizer
+        maxiter (int|None): maxiter for optimizer
+
+        W_{GMV} = argmin_{w}(sqrt(w COV w^T))
+        """
         if no_short is None:
             no_short = self.no_short
         if tol is None:
@@ -86,6 +127,11 @@ class GMTA:
         self.gmv = gmv
         
     def MVE(self,no_short = None,tol = None,maxiter = None):
+        """
+        calculate weight of assets with maximum sharp ratio
+
+        W_{MVE} = argmax_{w}(w^T std - Rf)
+        """
         if no_short is None:
             no_short = self.no_short
         if tol is None:
@@ -118,19 +164,31 @@ class GMTA:
         self.mve = mve
         
     def GMc(self):
+        """
+        calculate covariance between mve and gmv
+        
+        GMc = < W_{GMV} W_{MVE}^T , COV) 
+        """
         wmve = self.Wmve.reshape(-1,1)
         wgmv = self.Wgmv.reshape(-1,1)
         U = np.matmul(wgmv,wmve.T)
         return np.dot(U.flatten(),self.cov.values.flatten())
     
     def risk_return(self,w=0.02):
+        """
+        calculate risk and return for a weight
+        """
         cov = self.GMc()
         r = w*self.Rgmv + (1-w)*self.Rmve
         d = np.sqrt(w**2*self.Vgmv**2 + (1-w)**2*self.Vmve**2 + 2*w*(1-w)*cov)
         return d,r
 
-    def one_trade(self,data,w=0.02):
-        data = data[self.scodes]
+    def one_trade(self,data=None,w=0.02):
+        """
+        calculate weight for assets
+        """
+        if data is not None:
+            data = data[self.scodes]
         self.data = data.iloc[-self.period:]
         self.update()
         self.GMV()
@@ -138,6 +196,9 @@ class GMTA:
         return self.Wgmv * w + self.Wmve * (1-w)
         
     def trading_simulator(self,data,w=0.02):
+        """
+        simulate trading process with time series data
+        """
         data = data[self.scodes]
         ws = [np.zeros(len(self.scodes))]
         rs = []
@@ -152,6 +213,9 @@ class GMTA:
         return rs,ws
     
     def quandl_test_data_generator(self):
+        """
+        generate test data with quandl
+        """
         global use_quandl
         if self.apikey is None:
             print('quandl is not avaliable or no apikey provided, cannot use this function')
@@ -165,6 +229,9 @@ class GMTA:
         return res.dropna()
     
     def quandl_today_data_generator(self):
+        """
+        generate todays data with quandl
+        """
         global use_quandl
         if self.apikey is None:
             print('quandl is not avaliable or no apikey provided, cannot use this function')
@@ -177,8 +244,34 @@ class GMTA:
         quandl.ApiConfig.api_key = None
         return res.dropna()
     
-    def robinhood_one_trade_per_day_with_quandl(self,p):
-        assert isinstance(p,Portfolio)
+    def one_trade_per_day_with_quandl_and_robinhood(
+        self,
+        pmgr,
+        pnmae,
+        args = {
+            "call_from_mgr" : False
+        },misc = {
+            "w" : 0.02
+        }
+    ):
+        """
+        apply this algorithm on a robinhood portfolio once a day
+        pmgr (PortfolioMgr): portfolio manager
+        pname (str): name of a portfolio
+        args (dict): information for portfolio mgr to schedule this algorithm
+        misc (dict): parameters for this method only
+        """
+        assert isinstance(pmgr,PortfolioMgr)
+        assert pname in PortfolioMgr.portfolios
+        if not args["call_from_mgr"]:
+            pmgr.schedule(
+                algo = self,
+                method = "one_trade_per_day_with_quandl_and_robinhood",
+                portfolio_name = pname,
+                freq = 1440
+            )
+        w = misc['w']
+        p = pmgr.portfolios[pnmae]
         data = self.quandl_today_data_generator()
         p.portfolio_record_lock.acquire()
         idxs = p.portfolio_record.index
@@ -198,5 +291,49 @@ class GMTA:
                 p.market_buy(scode,int(n))
             elif n<0:
                 p.market_sell(scode,int(-n))
-        
-            
+    
+    def intraday_trading_with_robinhood(
+        self,
+        pmgr,
+        pname,
+        args = {
+            "frequent" : 2,
+            "call_from_mgr" : False
+        },
+        misc = {
+            "w" : 0.02
+        }
+    ):
+        """
+        frequently trading with this algorithm, 
+        your should have over 20000$ in your account for this method otherwise robinhood will keeps you from intraday trading
+        the frequent parameter is measured in minutes
+
+        """
+        assert isinstance(pmgr,PortfolioMgr)
+        assert pname in pmgr.portfolios
+        if not args["call_from_mgr"]:
+            pmgr.schedule(
+                algo = self,
+                method = "intrday_trading_with_robinhood",
+                portfolio_name = pname,
+                freq = args["frequent"]
+            )
+        w = misc['w']
+        p = pmgr.portfolios[pnmae]
+        self.data.loc[p.get_time()] = p.quote_last_price(*self.scodes)
+        if len(self.data)<self.period:
+            return
+        w_target = self.one_trade()
+        w_current = pd.Series(p.get_weights(*self.scodes)).loc[self.scodes].values
+        w_diff = w_target - w_current
+        s_diff = pd.Series(
+            ((w_diff*p.get_market_value())//self.data.loc[p.get_time()].values).astype(int),
+            index = self.scodes
+        )
+        for scode in self.scodes:
+            n = s_diff.loc[scode]
+            if n>0:
+                p.market_buy(scode,int(n))
+            elif n<0:
+                p.market_sell(scode,int(-n))
