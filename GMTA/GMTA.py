@@ -268,8 +268,10 @@ class GMTA:
                 algo = self,
                 method = "one_trade_per_day_with_quandl_and_robinhood",
                 portfolio_name = pname,
-                freq = 1440
+                freq = 1440,
+                misc = misc
             )
+            return
         w = misc['w']
         p = pmgr.portfolios[pnmae]
         data = self.quandl_today_data_generator()
@@ -317,18 +319,20 @@ class GMTA:
                 algo = self,
                 method = "intrday_trading_with_robinhood",
                 portfolio_name = pname,
-                freq = args["frequent"]
+                freq = args["frequent"],
+                misc = misc
             )
+            return
         w = misc['w']
         p = pmgr.portfolios[pnmae]
-        self.data.loc[p.get_time()] = p.quote_last_price(*self.scodes)
+        self.data.loc[Portfolio.get_time()] = p.quote_last_price(*self.scodes)
         if len(self.data)<self.period:
             return
         w_target = self.one_trade()
         w_current = pd.Series(p.get_weights(*self.scodes)).loc[self.scodes].values
         w_diff = w_target - w_current
         s_diff = pd.Series(
-            ((w_diff*p.get_market_value())//self.data.loc[p.get_time()].values).astype(int),
+            ((w_diff*p.get_market_value())//self.data.loc[Portfolio.get_time()].values).astype(int),
             index = self.scodes
         )
         for scode in self.scodes:
