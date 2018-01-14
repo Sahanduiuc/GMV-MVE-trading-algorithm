@@ -1,6 +1,6 @@
 
 # GMTA
-trading algorithm to allocate your asset dynamically on the efficient frontier.
+trading algorithm to allocate assets dynamically on the efficient frontier.
 
 ### About this project
 1. this package can be used as a simulator to see the algorithm performance with your own data
