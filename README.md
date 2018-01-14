@@ -36,7 +36,7 @@ to further describe the result combination of assets, this algorithm can also ca
 
 ### Example code
 
-simulator example:
+simulating example:
 
 ```
 from GMTA import GMTA
@@ -57,4 +57,37 @@ plt.plot(rts)
 pd.DataFrame(chs,columns = ["BAC","MMM","FFBC","YRD"]).plot()
 ```
 ![chs](misc/BAC_MMM_FFBC_200_WEIGHTS.png)
+
+trading example:
+
+```
+from Portfolio import PortfolioMgr
+gmta = GMTA(["YRD","MMM","RH","PCRX"])
+pm = PortfolioMgr(robin_un = 'robin un',robin_pd = 'robin pd',name = 'demo')
+pm.add_portfolio(name = "First",ini_bp = 500)
+gmta.intraday_trading_with_robinhood(pm,"First")
+
+```
+
+### How to install
+- install quandl(optional)
+    ```
+    pip3 install quandl
+    ```
+- install Robinhood Portfolio(oprional)
+    ```
+    git clone git@github.com:zhhrozhh/Robinhood.git
+    cd Robinhood
+    pip3 install .
+    cd ..
+    git clone git@github.com:zhhrozhh/Robinhood_Portfolio.git
+    cd Robinhood_Portfolio
+    pip3 install .
+    ```
+- install GMTA
+    ```
+    git@github.com:zhhrozhh/GMV-MVE-trading-algorithm.git
+    cd GMV-MVE-trading-algorithm
+    pip3 install .
+    ```
 
