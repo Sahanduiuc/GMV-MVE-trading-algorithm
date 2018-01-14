@@ -36,7 +36,7 @@ to further describe the result combination of assets, this algorithm can also ca
 
 ### Example code
 
-simulate example:
+simulator example:
 
 ```
 from GMTA import GMTA
