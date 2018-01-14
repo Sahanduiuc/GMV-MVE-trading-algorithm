@@ -6,7 +6,7 @@ trading algorithm to allocate assets dynamically on the efficient frontier.
 1. this package can be used as a simulator to see the algorithm performance with your own data
 2. this package can be used to do intraday algorithmic trading together with [robinhood portfolio framework](https://github.com/zhhrozhh/Robinhood_Portfolio)
 3. this package can be used to do daily algorithmic trading with both [robinhood portfolio framework](https://github.com/zhhrozhh/Robinhood_Portfolio) and [quandl EOD api](https://www.quandl.com/)
-4. there is no guarantee of the algorithm performance, prepare to loss if you are using it for 2. and 3.
+4. there is no guarantee of the algorithm performance, prepare to loss if you are using it for 2. or 3.
 
 ### Data format
 data should be provide to this algorithm as [pandas.DataFrame](https://pandas.pydata.org/) where indexes are datetime and columns are names of assets.
