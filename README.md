@@ -22,7 +22,7 @@ data should contain at least 3 different assets, otherwise, you can just calcula
 | 2015-12-22    | 0.031149  | 0.010103 | -0.004777 |
 
 ### How it works
-for given historical data, algorithm will pick the last n entries from it to calculate:
+for given historical data, algorithm will pick the last n entries it to calculate:
 
 ![WGMV](misc/WGMV__.gif) and ![WMVE](misc/WMVE__.gif)
 
