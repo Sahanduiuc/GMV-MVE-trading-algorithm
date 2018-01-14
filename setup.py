@@ -1,7 +1,7 @@
 import sys
 from os import path,listdir
 from setuptools import setup,find_packages
-__version__ = "0.0.1.0"
+__version__ = "0.0.1.5"
 REQUIRES = [
     'pandas>=0.20.1',
     'numpy>=1.12.1',

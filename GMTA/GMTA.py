@@ -5,6 +5,7 @@ except:
     use_quandl = False
 use_portfoliomgr = True
 try:
+    from Portfolio import PortfolioMgr
     from Portfolio import Portfolio
 except:
     use_portfoliomgr = False
@@ -49,7 +50,8 @@ class GMTA:
         self.gmv = None
         self.mve = None
         self.apikey = quandl_apikey
-            
+        self.raw_data = pd.DataFrame()
+
     def update(self,data=None):
         """
         update data and statistics info of data
@@ -247,7 +249,7 @@ class GMTA:
     def one_trade_per_day_with_quandl_and_robinhood(
         self,
         pmgr,
-        pnmae,
+        pname,
         args = {
             "call_from_mgr" : False
         },misc = {
@@ -262,7 +264,7 @@ class GMTA:
         misc (dict): parameters for this method only
         """
         assert isinstance(pmgr,PortfolioMgr)
-        assert pname in PortfolioMgr.portfolios
+        assert pname in pmgr.portfolios
         if not args["call_from_mgr"]:
             pmgr.schedule(
                 algo = self,
@@ -273,14 +275,14 @@ class GMTA:
             )
             return
         w = misc['w']
-        p = pmgr.portfolios[pnmae]
+        p = pmgr.portfolios[pname]
         data = self.quandl_today_data_generator()
         p.portfolio_record_lock.acquire()
         idxs = p.portfolio_record.index
         p.portfolio_record_lock.release()
         for x in idxs:
             assert x in self.scodes
-        w_target = self.one_trade(data)
+        w_target = self.one_trade(data = data,w = w)
         w_current = pd.Series(p.get_weights(*self.scodes)).loc[self.scodes].values
         w_diff = w_target - w_current
         s_diff = pd.Series(
@@ -293,6 +295,7 @@ class GMTA:
                 p.market_buy(scode,int(n))
             elif n<0:
                 p.market_sell(scode,int(-n))
+
     
     def intraday_trading_with_robinhood(
         self,
@@ -324,11 +327,13 @@ class GMTA:
             )
             return
         w = misc['w']
-        p = pmgr.portfolios[pnmae]
-        self.data.loc[Portfolio.get_time()] = p.quote_last_price(*self.scodes)
-        if len(self.data)<self.period:
+        p = pmgr.portfolios[pname]
+        self.raw_data.loc[Portfolio.get_time()] = p.quote_last_price(*self.scodes)
+        if len(self.raw_data)<self.period:
             return
-        w_target = self.one_trade()
+        DDX = ((self.row_data - self.raw_data.shift(1))/self.raw_data.shift(1)).iloc[-self.period:]
+        
+        w_target = self.one_trade(data = DDX,w = w)
         w_current = pd.Series(p.get_weights(*self.scodes)).loc[self.scodes].values
         w_diff = w_target - w_current
         s_diff = pd.Series(
