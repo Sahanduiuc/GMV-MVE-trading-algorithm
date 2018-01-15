@@ -28,7 +28,7 @@ for given historical data, algorithm will pick the last n entries it to calculat
 
 where COV is the covariance matrix of assets and rf is the risk free rate. in this algorithm, since there is no option to buy risk free assets in robinhood, set rf to a higher value only results in a risky MVE portfolio.
 
-all linear combinations of GMV and MVE are guarantee to be a portfolio on the efficient frontier, the trading algorithm simply change weights of your assets to be a specific combination of GMV and MVE. as new data comes in, both GMV and MVE will changed, and that will make the algorithm to make a new decision on what to sell/buy.
+all convex combinations of GMV and MVE are guarantee to be a portfolio on the efficient frontier, the trading algorithm simply change weights of your assets to be a specific combination of GMV and MVE. as new data comes in, both GMV and MVE will changed, and that will make the algorithm to make a new decision on what to sell/buy.
 
 to further describe the result combination of assets, this algorithm can also calculate the risk(or variance) of output.
 
