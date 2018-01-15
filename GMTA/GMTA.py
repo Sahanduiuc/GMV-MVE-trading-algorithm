@@ -253,7 +253,8 @@ class GMTA:
         args = {
             "call_from_mgr" : False
         },misc = {
-            "w" : 0.02
+            "w" : 0.02,
+            "cancel_count" = 5
         }
     ):
         """
@@ -306,7 +307,8 @@ class GMTA:
             "call_from_mgr" : False
         },
         misc = {
-            "w" : 0.02
+            "w" : 0.02,
+            "cancel_count" : 15
         }
     ):
         """
