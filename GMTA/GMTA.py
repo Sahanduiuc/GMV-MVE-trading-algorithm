@@ -204,6 +204,8 @@ class GMTA:
         data = data[self.scodes]
         ws = [np.zeros(len(self.scodes))]
         rs = []
+        m = []
+        v = []
         assert len(data) > self.period
         for i in range(len(data)-self.period):
             self.data = data.iloc[i:i+self.period]
@@ -212,7 +214,10 @@ class GMTA:
             self.MVE()
             rs.append(np.dot(ws[-1],self.data.iloc[-1].values))
             ws.append(w*self.Wgmv + (1-w)*self.Wmve)
-        return rs,ws
+            m_,v_ = self.risk_return()
+            m.append(m_)
+            v.append(v_)
+        return rs,ws,m,v
     
     def quandl_test_data_generator(self):
         """
@@ -264,6 +269,7 @@ class GMTA:
         args (dict): information for portfolio mgr to schedule this algorithm
         misc (dict): parameters for this method only
         """
+        #TODO remove duplicated
         assert isinstance(pmgr,PortfolioMgr)
         assert pname in pmgr.portfolios
         if not args["call_from_mgr"]:
@@ -287,11 +293,15 @@ class GMTA:
         w_current = pd.Series(p.get_weights(*self.scodes)).loc[self.scodes].values
         w_diff = w_target - w_current
         s_diff = pd.Series(
-            ((w_diff*p.get_market_value())//p.quote_last_price(*self.scodes)).astype(int),
+            ((w_diff*p.get_market_value())/p.quote_last_price(*self.scodes)).astype(int),
             index = self.scodes
         )
+        p.log_lock.acquire()
+        p.log.append("{}: decision made : {}".format(Portfolio.get_time(),str(s_diff)))
+        p.log_lock.release()
+
         for scode in self.scodes:
-            n = s_diff.loc[scode]
+            n = int(s_diff.loc[scode])
             if n>0:
                 p.market_buy(scode,int(n))
             elif n<0:
@@ -339,9 +349,12 @@ class GMTA:
         w_current = pd.Series(p.get_weights(*self.scodes)).loc[self.scodes].values
         w_diff = w_target - w_current
         s_diff = pd.Series(
-            ((w_diff*p.get_market_value())//self.data.loc[Portfolio.get_time()].values).astype(int),
+            ((w_diff*p.get_market_value())/self.data.loc[Portfolio.get_time()].values).astype(int),
             index = self.scodes
         )
+        p.log_lock.acquire()
+        p.log.append("{}: decision made : {}".format(Portfolio.get_time(),str(s_diff)))
+        p.log_lock.release()
         for scode in self.scodes:
             n = s_diff.loc[scode]
             if n>0:
