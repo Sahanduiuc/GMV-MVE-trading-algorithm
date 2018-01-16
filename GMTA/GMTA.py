@@ -254,7 +254,7 @@ class GMTA:
             "call_from_mgr" : False
         },misc = {
             "w" : 0.02,
-            "cancel_count" = 5
+            "cancel_count" : 5
         }
     ):
         """
