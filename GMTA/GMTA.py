@@ -5,6 +5,7 @@ except:
     use_quandl = False
 use_portfoliomgr = True
 try:
+    from Robinhood import Robinhood
     from Portfolio import PortfolioMgr
     from Portfolio import Portfolio
 except:
@@ -18,7 +19,7 @@ class GMTA:
         self,
         scodes,
         Rf = 0.01/310,
-        period = 150,
+        period = 30,
         no_short = True,
         optimizer_tol = 1e-15,
         optimizer_maxiter = 600,
@@ -110,7 +111,7 @@ class GMTA:
             'method':'SLSQP',
             'constraints':{
                 'type':'eq',
-                'fun':(lambda x:sum(x)-1)
+                'fun':(lambda x:sum(x)>1)
             },
             'tol':tol,
             'options':{
@@ -218,6 +219,8 @@ class GMTA:
             m.append(m_)
             v.append(v_)
         return rs,ws,m,v
+
+
     
     def quandl_test_data_generator(self):
         """
@@ -229,11 +232,15 @@ class GMTA:
             return
         quandl.ApiConfig.api_key = self.apikey
         res = pd.DataFrame()
+        res_cp = pd.DataFrame()
         for scode in self.scodes:
             cl = quandl.get("EOD/"+scode.replace(".","_"))['Close']
             res[scode] = (cl-cl.shift(1))/cl.shift(1)
+            res_cp[scode] = cl
+        res = res.dropna()
+        res_cp = res_cp.loc[res.index]
         quandl.ApiConfig.api_key = None
-        return res.dropna()
+        return {'data':res,'data_p':res_cp}
     
     def quandl_today_data_generator(self):
         """
@@ -244,13 +251,34 @@ class GMTA:
             print('quandl is not avaliable or no apikey provided, cannot use this function')
             return
         res = pd.DataFrame()
+        res_cp = pd.DataFrame()
         quandl.ApiConfig.api_key = self.apikey
         for scode in self.scodes:
             cl = quandl.get("EOD/"+scode.replace(".","_"),rows = self.period+1)["Close"]
             res[scode] = (cl-cl.shift(1))/cl.shift(1)
+            res_cp[scode] = cl
         quandl.ApiConfig.api_key = None
-        return res.dropna()
+        res = res.dropna()
+        res_cp = res_cp.loc[res.index]
+        return {'data':res,'data_p':res_cp}
     
+    def rh_week_intraday_data_generator(self,robin_un,robin_pd,interval = '5minute',span = 'week'):
+        trader = Robinhood()
+        trader.login(robin_un,robin_pd)
+        dfs = trader.get_historical_quotes(self.scodes,"5minute","week","regular")
+        data = pd.DataFrame()
+        data_cp = pd.DataFrame()
+        sd = zip(self.scodes,dfs)
+        for scode,df in sd:
+            cl = df["Close"]
+            c = (cl-cl.shift(1))/cl.shift(1)
+            data[scode] = c
+            data_cp[scode] = cl
+        data = data.dropna()
+        data_cp = data_cp.loc[data.index]
+        return {'data':data,'data_p':data_cp}
+
+
     def one_trade_per_day_with_quandl_and_robinhood(
         self,
         pmgr,
