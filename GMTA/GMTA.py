@@ -278,6 +278,22 @@ class GMTA:
         data_cp = data_cp.loc[data.index]
         return {'data':data,'data_p':data_cp}
 
+    def one_suggestion_qd_rh(self,pmgr,pname,w=0.02):
+        p = pmgr.portfolios[pname]
+        data =self.quandl_today_data_generator()['data']
+        p.portfolio_record_lock.acquire()
+        idxs = p.portfolio_record.index
+        p.portfolio_record_lock.release()
+        for x in idxs:
+            assert x in self.scodes
+        w_target = self.one_trade(data = data,w = w)
+        w_current = pd.Series(p.get_weights(*self.scodes)).loc[self.scodes].values
+        w_diff = w_target - w_current
+        s_diff = pd.Series(
+            ((w_diff*p.get_market_value())/p.quote_last_price(*self.scodes)).astype(int),
+            index = self.scodes
+        )
+        return s_diff
 
     def one_trade_per_day_with_quandl_and_robinhood(
         self,
@@ -311,7 +327,7 @@ class GMTA:
             return
         w = misc['w']
         p = pmgr.portfolios[pname]
-        data = self.quandl_today_data_generator()
+        data = self.quandl_today_data_generator()['data']
         p.portfolio_record_lock.acquire()
         idxs = p.portfolio_record.index
         p.portfolio_record_lock.release()
