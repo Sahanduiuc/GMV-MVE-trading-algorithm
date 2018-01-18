@@ -111,7 +111,7 @@ class GMTA:
             'method':'SLSQP',
             'constraints':{
                 'type':'eq',
-                'fun':(lambda x:sum(x)>1)
+                'fun':(lambda x:sum(x)-1)
             },
             'tol':tol,
             'options':{
