@@ -1,4 +1,5 @@
 from .GMTA import GMTA
+import pandas as pd
 class GMTA2_NNCOV(GMTA):
     def __init__(
         self,
@@ -20,13 +21,13 @@ class GMTA2_NNCOV(GMTA):
         ss = []
         d0 = data
         rs = []
-        while len(cs):
+        while len(d0):
             d1 = pd.DataFrame()
             while (d0.cov()<0).sum().sum():
                 scode = (d0.cov()<0).sum().argmax()
                 d1[scode] = d0.pop(scode)
             rs.append(d0)
-            ss.append(d0.columns)
+            ss.append(list(d0.columns))
             d0 = d1
         return ss,rs
 
