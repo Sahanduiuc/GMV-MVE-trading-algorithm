@@ -278,6 +278,7 @@ class GMTA:
         data_cp = data_cp.loc[data.index]
         return {'data':data,'data_p':data_cp}
 
+
     def one_suggestion_qd_rh(self,pmgr,pname,w=0.02):
         p = pmgr.portfolios[pname]
         data =self.quandl_today_data_generator()['data']
