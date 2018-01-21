@@ -1,5 +1,6 @@
 from .GMTA import GMTA
 import pandas as pd
+import numpy as np
 class GMTA2_NNCOV(GMTA):
     def __init__(
         self,
@@ -49,7 +50,6 @@ class GMTA2_NNCOV(GMTA):
                 quandl_apikey = self.apikey
                 )
             a,b,_,_ = g.trading_simulator(datax[s],self.w2)
-
             aas[','.join(s)] = a
             ws[','.join(s)] = pd.Series(b[-1],index = s)
         gt = GMTA(scodes = list(aas.columns),period = self.period2)
@@ -58,5 +58,18 @@ class GMTA2_NNCOV(GMTA):
         for s in W.index:
             res.loc[s.split(',')] = W.loc[s]*ws[s]
         return res
+
+    def trading_simulator(self,data):
+        s_period = self.period+self.period2
+        L = len(data)
+        ws = [np.zeros(len(self.scodes))]
+        rs = []
+        for i in range(L-s_period-1):
+            datax = data.iloc[i:i+s_period]
+            w = self.one_trade(datax)
+            rs.append(np.dot(ws[-1],datax.iloc[-1]))
+            ws.append(w)
+        return rs,ws,[],[]
+
 
 

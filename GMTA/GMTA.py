@@ -296,6 +296,32 @@ class GMTA:
         )
         return s_diff
 
+
+    def market_decision_exe(self,p,s_diff):
+        for scode in self.scodes:
+            n = s_diff.loc[scode]
+            if n>0:
+                p.market_buy(scode,int(n))
+            elif n<0:
+                p.market_sell(scode,int(-n))
+
+    def algo_header(self,**args):
+        print(args)
+        assert isinstance(args['pmgr'],PortfolioMgr)
+        assert args['pname'] in args['pmgr'].portfolios
+        if not args['args']["call_from_mgr"]:
+            args['pmgr'].schedule(
+                algo = self,
+                method = args['method'],
+                portfolio_name = args['pname'],
+                freq = args['freq'],
+                misc = args['misc']
+            )
+            return False
+        return True
+
+
+
     def one_trade_per_day_with_quandl_and_robinhood(
         self,
         pmgr,
@@ -315,17 +341,13 @@ class GMTA:
         misc (dict): parameters for this method only
         """
         #TODO remove duplicated
-        assert isinstance(pmgr,PortfolioMgr)
-        assert pname in pmgr.portfolios
-        if not args["call_from_mgr"]:
-            pmgr.schedule(
-                algo = self,
-                method = "one_trade_per_day_with_quandl_and_robinhood",
-                portfolio_name = pname,
-                freq = 1440,
-                misc = misc
-            )
+        params = locals()
+        params.pop('self')
+        params['method'] = 'one_trade_per_day_with_quandl_and_robinhood'
+        params['freq'] = 1440
+        if not self.algo_header(**params):
             return
+
         w = misc['w']
         p = pmgr.portfolios[pname]
         data = self.quandl_today_data_generator()['data']
@@ -345,14 +367,11 @@ class GMTA:
         p.log.append("{}: decision made : {}".format(Portfolio.get_time(),str(s_diff)))
         p.log_lock.release()
 
-        for scode in self.scodes:
-            n = int(s_diff.loc[scode])
-            if n>0:
-                p.market_buy(scode,int(n))
-            elif n<0:
-                p.market_sell(scode,int(-n))
+        self.market_decision_exe(p,s_diff)
 
     
+
+
     def intraday_trading_with_robinhood(
         self,
         pmgr,
@@ -372,17 +391,16 @@ class GMTA:
         the frequent parameter is measured in minutes
 
         """
-        assert isinstance(pmgr,PortfolioMgr)
-        assert pname in pmgr.portfolios
-        if not args["call_from_mgr"]:
-            pmgr.schedule(
-                algo = self,
-                method = "intrday_trading_with_robinhood",
-                portfolio_name = pname,
-                freq = args["frequent"],
-                misc = misc
-            )
+        
+        params = locals()
+        #print(params)
+        params.pop('self')
+        params['method'] = 'one_trade_per_day_with_quandl_and_robinhood'
+        params['freq'] = args['frequent']
+
+        if not self.algo_header(**params):
             return
+
         w = misc['w']
         p = pmgr.portfolios[pname]
         self.raw_data.loc[Portfolio.get_time()] = p.quote_last_price(*self.scodes)
@@ -400,9 +418,5 @@ class GMTA:
         p.log_lock.acquire()
         p.log.append("{}: decision made : {}".format(Portfolio.get_time(),str(s_diff)))
         p.log_lock.release()
-        for scode in self.scodes:
-            n = s_diff.loc[scode]
-            if n>0:
-                p.market_buy(scode,int(n))
-            elif n<0:
-                p.market_sell(scode,int(-n))
+
+        self.market_decision_exe(p,s_diff)
