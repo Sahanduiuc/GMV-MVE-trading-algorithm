@@ -320,8 +320,51 @@ class GMTA:
             return False
         return True
 
+    def mixed_trade_with_quandl_and_robinhood(
+        self,
+        pmgr,
+        pname,
+        args = {
+            "call_from_mgr" : False,
+        },misc = {
+            "w" : 0.02,
+            "cancel_count" : 5
+        }
+    ):
+        params = locals()
+        params.pop('self')
+        params['method'] = 'mixed_trade_with_quandl_and_robinhood'
+        params['freq'] = 2
+        if not self.algo_header(**params):
+            return
+        w = misc['w']
+        p = pmgr.portfolios[pname]
+        data_d = self.quandl_today_data_generator()
+        data = data_d['data']
+        data_p = data['data_p']
+        data_n = p.quote_last_price(*self.scodes)
+        dd = data_p[self.scode].iloc[-1]
+        d = pd.DataFrame([(data_n - dd)/dd],columns = self.scodes)
+        data = data.append(d)
+        p.portfolio_record_lock.acquire()
+        idxs = p.portfolio_record.index
+        p.portfolio_record_lock.release()
+        for x in idxs:
+            assert x in self.scodes
+        w_target = self.one_trade(data = data,w = w)
+        w_current = pd.Series(p.get_weights(*self.scodes)).loc[self.scodes].values
+        w_diff = w_target - w_current
+        s_diff = pd.Series(
+            ((w_diff*p.get_market_value())/p.quote_last_price(*self.scodes)).astype(int),
+            index = self.scodes
+        )
+        p.log_lock.acquire()
+        p.log.append("{}: decision made : {}".format(Portfolio.get_time(),str(s_diff)))
+        p.log_lock.release()
 
+        self.market_decision_exe(p,s_diff)
 
+        
     def one_trade_per_day_with_quandl_and_robinhood(
         self,
         pmgr,
