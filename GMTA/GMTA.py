@@ -234,7 +234,13 @@ class GMTA:
         res = pd.DataFrame()
         res_cp = pd.DataFrame()
         for scode in self.scodes:
-            cl = quandl.get("EOD/"+scode.replace(".","_"))['Close']
+            dt = quandl.get("EOD/"+scode.replace(".","_"))
+            cl = dt['Close']
+            split = dt['Split']
+            sidx = split[split!=1].index
+            for idx in sidx:
+                cl.loc[:idx] = cl.loc[:idx]/split.loc[idx]
+                cl.loc[idx] = cl.loc[idx]*split.loc[idx]
             res[scode] = (cl-cl.shift(1))/cl.shift(1)
             res_cp[scode] = cl
         res = res.dropna()
@@ -254,7 +260,13 @@ class GMTA:
         res_cp = pd.DataFrame()
         quandl.ApiConfig.api_key = self.apikey
         for scode in self.scodes:
-            cl = quandl.get("EOD/"+scode.replace(".","_"),rows = self.period+1)["Close"]
+            dt = quandl.get("EOD/"+scode.replace(".","_"),rows = self.period+1)
+            cl = dt['Close']
+            split = dt['Split']
+            sidx = split[split!=1].index
+            for idx in sidx:
+                cl.loc[:idx] = cl.loc[:idx]/split.loc[idx]
+                cl.loc[idx] = cl.loc[idx]*split.loc[idx]
             res[scode] = (cl-cl.shift(1))/cl.shift(1)
             res_cp[scode] = cl
         quandl.ApiConfig.api_key = None
@@ -364,7 +376,7 @@ class GMTA:
 
         self.market_decision_exe(p,s_diff)
 
-        
+
     def one_trade_per_day_with_quandl_and_robinhood(
         self,
         pmgr,
