@@ -1,7 +1,7 @@
 import sys
 from os import path,listdir
 from setuptools import setup,find_packages
-__version__ = "0.0.2.18"
+__version__ = "0.0.2.20"
 REQUIRES = [
     'pandas>=0.20.1',
     'numpy>=1.12.1',
@@ -20,5 +20,4 @@ setup(
     keywords = 'algorithmic trading',
     packages = find_packages(),
     install_requires = REQUIRES
-
 )

@@ -8,6 +8,7 @@ try:
     from Robinhood import Robinhood
     from Portfolio import PortfolioMgr
     from Portfolio import Portfolio
+    from TTool import sell_first_decision_exe
 except:
     use_portfoliomgr = False
 import pandas as pd
@@ -374,7 +375,7 @@ class GMTA:
         p.log.append("{}: decision made : {}".format(Portfolio.get_time(),str(s_diff)))
         p.log_lock.release()
 
-        self.market_decision_exe(p,s_diff)
+        sell_first_decision_exe(p,s_diff)
 
 
     def one_trade_per_day_with_quandl_and_robinhood(
@@ -422,7 +423,7 @@ class GMTA:
         p.log.append("{}: decision made : {}".format(Portfolio.get_time(),str(s_diff)))
         p.log_lock.release()
 
-        self.market_decision_exe(p,s_diff)
+        sell_first_decision_exe(p,s_diff)
 
     
 
@@ -474,4 +475,4 @@ class GMTA:
         p.log.append("{}: decision made : {}".format(Portfolio.get_time(),str(s_diff)))
         p.log_lock.release()
 
-        self.market_decision_exe(p,s_diff)
+        sell_first_decision_exe(p,s_diff)
