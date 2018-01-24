@@ -206,7 +206,6 @@ class GMTA:
         data = data[self.scodes]
         ws = [np.zeros(len(self.scodes))]
         rs = []
-        m = []
         v = []
         assert len(data) > self.period
         for i in range(len(data)-self.period):
@@ -216,9 +215,11 @@ class GMTA:
             self.MVE()
             rs.append(np.dot(ws[-1],self.data.iloc[-1].values))
             ws.append(w*self.Wgmv + (1-w)*self.Wmve)
-            m_,v_ = self.risk_return()
-            m.append(m_)
+            _,v_ = self.risk_return()
             v.append(v_)
+        m = np.Series(rs)+1
+        for i in range(1,len(m)):
+            m[i] *= m[i-1]
         return rs,ws,m,v
 
 
@@ -294,7 +295,7 @@ class GMTA:
 
     def one_suggestion_qd_rh(self,pmgr,pname,w=0.02):
         p = pmgr.portfolios[pname]
-        data =self.quandl_today_data_generator()['data']
+        data = self.quandl_today_data_generator()['data']
         p.portfolio_record_lock.acquire()
         idxs = p.portfolio_record.index
         p.portfolio_record_lock.release()
