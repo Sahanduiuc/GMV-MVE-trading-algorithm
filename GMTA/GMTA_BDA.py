@@ -9,6 +9,7 @@ class GMTA_BDA:
         period = 40,
         ws = None,
         method = 'max',
+        no_short = True,
         quandl_apikey = None
         ):
         self.scodes = scodes
@@ -53,9 +54,12 @@ class GMTA_BDA:
 
             e = r1 - r2
             f = r2
+            wgmv = -b/(2*a)
+            wmve = (b*f-2*c*e)/(b*e-2*a*f)
+            if no_short:
+                wgmv = min(max(wgmv,0),1)
+                wmve = min(max(wmve,0),1)
 
-            wgmv = min(max(-b/(2*a),0),1)
-            wmve = min(max((b*f-2*c*e)/(b*e-2*a*f),0),1)
 
             w = self.ws[mx]*wgmv + (1-self.ws[mx])*wmve
 
@@ -122,4 +126,33 @@ class GMTA_BDA:
             index = self.scodes
         )
         return s_diff
+
+    def real_simulator(self,data,datap,inifund = 25000):
+
+        ps_s = [pd.Series(np.zeros(len(data.columns)),index = data.columns)]
+        mv_s = [inifund]
+        bp_s = []
+        bp = inifund
+
+        for i in range(len(data) - self.period-2):
+            d = data.iloc[i:self.period + i ]
+            p = datap.iloc[self.period + i]
+            w = self.one_trade(d)
+            mv = bp + pd.np.dot(ps_s[-1],p)
+
+            ps = (w*mv*0.95/p).astype(int)
+
+            ps_diff = ps - ps_s[-1]
+
+
+            for scode in ps_diff.index:
+                if ps_diff[scode] > 0:
+                    bp -= abs(ps_diff[scode]) * p[scode] * 1.005
+                if ps_diff[scode] < 0:
+                    bp += abs(ps_diff[scode]) * p[scode] * 0.995
+            mv = bp + pd.np.dot(ps,p)
+            ps_s.append(ps)
+            mv_s.append(mv)
+            bp_s.append(bp)
+        return ps_s,mv_s,bp_s
 

@@ -54,7 +54,7 @@ class GMTA:
         self.apikey = quandl_apikey
         self.raw_data = pd.DataFrame()
 
-    def update(self,data=None):
+    def update(self,data = None):
         """
         update data and statistics info of data
 
@@ -178,7 +178,7 @@ class GMTA:
         U = np.matmul(wgmv,wmve.T)
         return np.dot(U.flatten(),self.cov.values.flatten())
     
-    def risk_return(self,w=0.02):
+    def risk_return(self,w = 0.02):
         """
         calculate risk and return for a weight
         """
@@ -187,7 +187,7 @@ class GMTA:
         d = np.sqrt(w**2*self.Vgmv**2 + (1-w)**2*self.Vmve**2 + 2*w*(1-w)*cov)
         return d,r
 
-    def one_trade(self,data=None,w=0.02):
+    def one_trade(self,data = None,w = 0.02):
         """
         calculate weight for assets
         """
@@ -199,7 +199,7 @@ class GMTA:
         self.MVE()
         return self.Wgmv * w + self.Wmve * (1-w)
         
-    def trading_simulator(self,data,w=0.02):
+    def trading_simulator(self,data,w = 0.02):
         """
         simulate trading process with time series data
         """
