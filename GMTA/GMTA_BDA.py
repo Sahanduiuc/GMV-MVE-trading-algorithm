@@ -22,6 +22,7 @@ class GMTA_BDA:
         assert len(ws) == len(scodes)-1
         self.ws = ws
         self.apikey = quandl_apikey
+        self.no_short = no_short
 
     def one_trade(self,data):
         d = data.copy()[self.scodes]
@@ -56,7 +57,7 @@ class GMTA_BDA:
             f = r2
             wgmv = -b/(2*a)
             wmve = (b*f-2*c*e)/(b*e-2*a*f)
-            if no_short:
+            if self.no_short:
                 wgmv = min(max(wgmv,0),1)
                 wmve = min(max(wmve,0),1)
 
@@ -66,6 +67,7 @@ class GMTA_BDA:
             mmap[mx] = mmap[scode1]*w + mmap[scode2]*(1-w)
             d[mx] = d1*w + d2*(1-w)
             mx += 1
+            
         return mmap[mx-1]
 
 
