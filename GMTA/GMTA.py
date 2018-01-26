@@ -217,7 +217,7 @@ class GMTA:
             ws.append(w*self.Wgmv + (1-w)*self.Wmve)
             _,v_ = self.risk_return()
             v.append(v_)
-        m = np.Series(rs)+1
+        m = pd.Series(rs)+1
         for i in range(1,len(m)):
             m[i] *= m[i-1]
         return rs,ws,m,v

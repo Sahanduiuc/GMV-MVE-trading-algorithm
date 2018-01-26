@@ -26,4 +26,4 @@ class GMTA_WTD(GMTA):
             self.data = data
         self.mean = self.data.apply(lambda x:np.average(x,weights = self.ws))
         self.std = ((self.data - self.mean)**2).apply(lambda x:np.sqrt(np.average(x,weights=self.ws)))
-        self.cov = pd.DataFrame(np.cov(self.Data.T,aweights=self.ws),index = self.scodes,columns = self.scodes)
+        self.cov = pd.DataFrame(np.cov(self.data.T,aweights=self.ws),index = self.scodes,columns = self.scodes)
