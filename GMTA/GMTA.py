@@ -61,7 +61,7 @@ class GMTA:
         data (DataFrame|None): data of historical price change in each stock 
         """
         if data is not None:
-            self.data = data
+            self.data = data[self.scodes]
         self.cov = self.data.cov()
         self.std = self.data.std(ddof = 0)
         self.mean = self.data.mean()
