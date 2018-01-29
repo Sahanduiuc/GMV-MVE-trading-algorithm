@@ -197,7 +197,7 @@ class GMTA:
         self.update()
         self.GMV()
         self.MVE()
-        return self.Wgmv * w + self.Wmve * (1-w)
+        return pd.Series(self.Wgmv * w + self.Wmve * (1-w),index = self.scodes)
         
     def trading_simulator(self,data,w = 0.02):
         """
@@ -217,10 +217,40 @@ class GMTA:
             ws.append(w*self.Wgmv + (1-w)*self.Wmve)
             _,v_ = self.risk_return()
             v.append(v_)
-        m = pd.Series(rs)+1
+        m = np.array(rs)+1
         for i in range(1,len(m)):
             m[i] *= m[i-1]
         return rs,ws,m,v
+
+    def mixed_trading_simulator(self,data = None,idata = None,robin_un = None,robin_pd = None):
+        if data is None:
+            data = self.quandl_today_data_generator()['data_p']
+        if idata is None:
+            idata = self.rh_intraday_data_generator(robin_un,robin_pd,span = 'day')['data_p']
+        qdata = (idata - idata.shift(1))/idata.shift(1)
+        qdata.iloc[0] = (idata.iloc[0] - data.iloc[-1])/data.iloc[-1]
+        idata = (idata-data.iloc[-1])/data.iloc[-1]
+        data = ((data-data.shift(1))/data.shift(1)).dropna()
+        now = Portfolio.get_time()
+
+        ws = [np.zeros(len(self.scodes))]
+        rs = []
+        v = []
+
+        
+        for i in range(len(idata)):
+            data.loc[now] = idata.iloc[i]
+            w = self.one_trade(data)
+            rs.append(np.dot(ws[-1],qdata.iloc[i]))
+            ws.append(w)
+
+
+        m = np.array(rs)+1
+        for i in range(1,len(m)):
+            m[i] *= m[i-1]
+        return rs,ws,m,v
+
+
 
 
     
@@ -276,7 +306,7 @@ class GMTA:
         res_cp = res_cp.loc[res.index]
         return {'data':res,'data_p':res_cp}
     
-    def rh_week_intraday_data_generator(self,robin_un,robin_pd,interval = '5minute',span = 'week'):
+    def rh_intraday_data_generator(self,robin_un,robin_pd,interval = '5minute',span = 'week'):
         trader = Robinhood()
         trader.login(robin_un,robin_pd)
         dfs = trader.get_historical_quotes(self.scodes,"5minute","week","regular")

@@ -1,8 +1,9 @@
 from TTool import *
 import numpy as np
 import pandas as pd
+from GMTA import GMTA
 
-class GMTA_BDA:
+class GMTA_BDA(GMTA):
     def __init__(
         self,
         scodes,
@@ -12,6 +13,10 @@ class GMTA_BDA:
         no_short = True,
         quandl_apikey = None
         ):
+        params = locals()
+        params.pop('ws')
+        params.pop('method')
+        GMTA.__init__(**params)
         self.scodes = scodes
         assert period > 0
         assert method in ['max','min']
@@ -105,7 +110,8 @@ class GMTA_BDA:
         for i in range(len(data)-self.period):
             d = data.iloc[i:i+self.period]
             wres = self.one_trade(d)
-            rs.append(np.dot(wres,d.iloc[-1].values))
+            #rs.append(np.dot(wres,d.iloc[-1].values))
+            rs.append(np.dot(ws[-1],d.iloc[-1].values))
             ws.append(wres)
         m = np.array(rs)+1
         for i in range(1,len(m)):
