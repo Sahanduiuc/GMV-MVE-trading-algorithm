@@ -30,7 +30,8 @@ class GMTA_BDA(GMTA):
         self.no_short = no_short
 
     def one_trade(self,data):
-        d = data.copy()[self.scodes]
+        d = data.copy()[self.scodes].iloc[-self.period:]
+        print(len(d))
         mmap = {}
         for scode in self.scodes:
             x = pd.Series(np.zeros(len(self.scodes)),index = self.scodes)
@@ -123,12 +124,11 @@ class GMTA_BDA(GMTA):
         for x in idxs:
             assert x in self.scodes
         w_target = self.one_trade(data = data)
-        w_current = pd.Series(p.get_weights(*self.scodes)).loc[self.scodes].values
-        w_diff = w_target - w_current
-        s_diff = pd.Series(
-            ((w_diff*p.get_market_value())/p.quote_last_price(*self.scodes)).astype(int),
+        s_target = pd.Series(
+            ((w_target*p.get_market_value())/p.quote_last_price(*self.scodes)).astype(int),
             index = self.scodes
         )
+        s_diff = (s_target - p.portfolio_record['SHARES']).fillna(0).astype(int)
         return s_diff
 
     def real_simulator(self,data,datap,inifund = 25000):

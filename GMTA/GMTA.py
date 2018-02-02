@@ -324,12 +324,11 @@ class GMTA:
         for x in idxs:
             assert x in self.scodes
         w_target = self.one_trade(data = data,w = w)
-        w_current = pd.Series(p.get_weights(*self.scodes)).loc[self.scodes].values
-        w_diff = w_target - w_current
-        s_diff = pd.Series(
-            ((w_diff*p.get_market_value())/p.quote_last_price(*self.scodes)).astype(int),
+        s_target = pd.Series(
+            ((w_target*p.get_market_value())/p.quote_last_price(*self.scodes)).astype(int),
             index = self.scodes
         )
+        s_diff = (s_target - p.portfolio_record['SHARES']).fillna(0).astype(int)
         return s_diff
 
 
