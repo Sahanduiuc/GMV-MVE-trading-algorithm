@@ -267,12 +267,8 @@ class GMTA:
         res_cp = pd.DataFrame()
         for scode in self.scodes:
             dt = quandl.get("EOD/"+scode.replace(".","_"))
-            cl = dt['Close']
-            split = dt['Split']
-            sidx = split[split!=1].index
-            for idx in sidx:
-                cl.loc[:idx] = cl.loc[:idx]/split.loc[idx]
-                cl.loc[idx] = cl.loc[idx]*split.loc[idx]
+            cl = dt['Adj_Close']
+
             res[scode] = (cl-cl.shift(1))/cl.shift(1)
             res_cp[scode] = cl
         res = res.dropna()
@@ -293,12 +289,8 @@ class GMTA:
         quandl.ApiConfig.api_key = self.apikey
         for scode in self.scodes:
             dt = quandl.get("EOD/"+scode.replace(".","_"),rows = self.period+1)
-            cl = dt['Close']
-            split = dt['Split']
-            sidx = split[split!=1].index
-            for idx in sidx:
-                cl.loc[:idx] = cl.loc[:idx]/split.loc[idx]
-                cl.loc[idx] = cl.loc[idx]*split.loc[idx]
+            cl = dt['Adj_Close']
+
             res[scode] = (cl-cl.shift(1))/cl.shift(1)
             res_cp[scode] = cl
         quandl.ApiConfig.api_key = None
