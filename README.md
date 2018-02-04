@@ -1,4 +1,4 @@
-
+##TODO
 <!--
 # GMTA
 trading algorithm to allocate assets dynamically on the efficient frontier.
