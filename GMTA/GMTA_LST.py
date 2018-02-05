@@ -16,7 +16,7 @@ class GMTA_LST(GMTA):
         quandl_apikey = None,
         w = None
     ):
-        GMTA.__init__(self,scodes,0,l_period,1e-15,600,quandl_apikey)
+        GMTA.__init__(self,scodes,0,l_period,True,1e-15,600,quandl_apikey)
         assert s_period > 0
         assert l_period > s_period
         if w is None:
