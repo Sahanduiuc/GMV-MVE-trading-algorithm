@@ -31,7 +31,6 @@ class GMTA_BDA(GMTA):
 
     def one_trade(self,data):
         d = data.copy()[self.scodes].iloc[-self.period:]
-        print(len(d))
         mmap = {}
         for scode in self.scodes:
             x = pd.Series(np.zeros(len(self.scodes)),index = self.scodes)
@@ -128,7 +127,8 @@ class GMTA_BDA(GMTA):
             ((w_target*p.get_market_value())/p.quote_last_price(*self.scodes)).astype(int),
             index = self.scodes
         )
-        s_diff = (s_target - p.portfolio_record['SHARES']).fillna(0).astype(int)
+        
+        s_diff = s_diff = (s_target - p.portfolio_record['SHARES'].loc[s_target.index].fillna(0)).astype(int)
         return s_diff
 
     def real_simulator(self,data,datap,inifund = 25000):

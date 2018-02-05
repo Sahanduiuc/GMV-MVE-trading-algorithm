@@ -49,7 +49,9 @@ class GMTA_LST(GMTA):
             ((w_target*p.get_market_value())/p.quote_last_price(*self.scodes)).astype(int),
             index = self.scodes
         )
-        s_diff = (s_target - p.portfolio_record['SHARES']).fillna(0).astype(int)
+
+        s_diff = (s_target - p.portfolio_record['SHARES'].loc[s_target.index].fillna(0)).astype(int)
+
         return s_diff        
         
     def trading_simulator(self,data):

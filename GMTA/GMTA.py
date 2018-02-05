@@ -328,7 +328,7 @@ class GMTA:
             ((w_target*p.get_market_value())/p.quote_last_price(*self.scodes)).astype(int),
             index = self.scodes
         )
-        s_diff = (s_target - p.portfolio_record['SHARES']).fillna(0).astype(int)
+        s_diff = (s_target - p.portfolio_record['SHARES'].loc[s_target.index].fillna(0)).astype(int)
         return s_diff
 
 
@@ -341,7 +341,6 @@ class GMTA:
                 p.market_sell(scode,int(-n))
 
     def algo_header(self,**args):
-        print(args)
         assert isinstance(args['pmgr'],PortfolioMgr)
         assert args['pname'] in args['pmgr'].portfolios
         if not args['args']["call_from_mgr"]:
