@@ -42,6 +42,9 @@ class GMTA:
         global use_quandl,use_portfoliomgr
         if not use_quandl:
             assert quandl_apikey is None
+        for scode in scodes:
+            while scodes.count(scode) > 1:
+                scodes.remove(scode)
         self.scodes = scodes
         self.Rf = Rf
         self.period = period
@@ -266,7 +269,13 @@ class GMTA:
         res = pd.DataFrame()
         res_cp = pd.DataFrame()
         for scode in self.scodes:
-            dt = quandl.get("EOD/"+scode.replace(".","_"))
+            try:
+                dt = quandl.get("EOD/"+scode.replace(".","_"))
+            except Exception as e:
+                print('error {}'.format(scode))
+                print(e)
+                self.scodes.remove(scode)
+
             cl = dt['Adj_Close']
 
             res[scode] = (cl-cl.shift(1))/cl.shift(1)
