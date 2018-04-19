@@ -1,6 +1,12 @@
+
+###### long short term
+
 from GMTA import GMTA_BDA
 from GMTA import GMTA
 from TTool import *
+
+
+
 
 class GMTA_LST(GMTA):
     def __init__(

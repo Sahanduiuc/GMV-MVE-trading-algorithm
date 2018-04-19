@@ -257,10 +257,11 @@ class GMTA:
 
 
     
-    def quandl_test_data_generator(self):
+    def quandl_test_data_generator(self,trade_on = 'close',extent = False):
         """
         generate test data with quandl
         """
+        assert trade_on in ['close','open']
         global use_quandl
         if self.apikey is None:
             print('quandl is not avaliable or no apikey provided, cannot use this function')
@@ -275,12 +276,16 @@ class GMTA:
                 print('error {}'.format(scode))
                 print(e)
                 self.scodes.remove(scode)
-
-            cl = dt['Adj_Close']
+            cl = dt['Adj_Open']
+            if trade_on == 'close':
+            	cl = dt['Adj_Close']
 
             res[scode] = (cl-cl.shift(1))/cl.shift(1)
             res_cp[scode] = cl
-        res = res.dropna()
+        if extent:
+        	res = res.fillna(0)
+        else:
+        	res = res.dropna()
         res_cp = res_cp.loc[res.index]
         quandl.ApiConfig.api_key = None
         return {'data':res,'data_p':res_cp}
@@ -506,3 +511,8 @@ class GMTA:
         p.log_lock.release()
 
         sell_first_decision_exe(p,s_diff)
+
+
+
+
+
