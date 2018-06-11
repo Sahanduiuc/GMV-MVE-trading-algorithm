@@ -1,5 +1,5 @@
 ##TODO
-<!--
+
 # GMTA
 trading algorithm to allocate assets dynamically on the efficient frontier.
 
@@ -91,5 +91,5 @@ gmta.intraday_trading_with_robinhood(pm,"First")
     cd GMV-MVE-trading-algorithm
     pip3 install .
     ```
-    -->
+
 
